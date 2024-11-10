@@ -58,7 +58,11 @@ function renderCurrentWeather(currentWeather: any) {
 
 const renderForecast = (forecast: any) => {
   forecastContainer.innerHTML = `<div class="col-12"><h4>5-Day Forecast:</h4></div>`;
-  forecast.forEach(renderForecastCard);
+  if (forecast && Array.isArray(forecast)) {
+    forecast.forEach(renderForecastCard);
+  } else {
+    forecastContainer.innerHTML += `<p>No forecast data available.</p>`;
+  }
 };
 
 const renderForecastCard = (forecast: any) => {
@@ -74,6 +78,7 @@ const renderForecastCard = (forecast: any) => {
 
   forecastContainer.append(col);
 };
+
 
 const renderSearchHistory = async (searchHistory: any) => {
   const historyList = await searchHistory.json();

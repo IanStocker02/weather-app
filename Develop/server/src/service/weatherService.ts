@@ -41,6 +41,18 @@ class WeatherService {
     }
   }
 
+  private async fetchForecastData({ lat, lon }: Coordinates): Promise<any | null> {
+    try {
+      const response = await axios.get(
+        `${this.baseURL}forecast?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=imperial`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching forecast data:", error);
+      return null;
+    }
+  }
+
   async getWeatherForCity(city: string): Promise<any | null> {
     const locationData = await this.fetchLocationData(city);
     if (!locationData) {
@@ -48,11 +60,15 @@ class WeatherService {
       return null;
     }
     const weatherData = await this.fetchWeatherData(locationData);
-    if (!weatherData) {
+    const forecastData = await this.fetchForecastData(locationData);
+    if (!weatherData || !forecastData) {
       console.error("Weather data not available");
       return null;
     }
-    return this.parseCurrentWeather(weatherData);
+    return {
+      current: this.parseCurrentWeather(weatherData),
+      forecast: this.parseForecastData(forecastData)
+    };
   }
 
   private parseCurrentWeather(data: any) {
@@ -65,6 +81,17 @@ class WeatherService {
       windSpeed: data.wind.speed,
       humidity: data.main.humidity,
     };
+  }
+
+  private parseForecastData(data: any) {
+    return data.list.filter((item: any) => item.dt_txt.includes("12:00:00")).map((item: any) => ({
+      date: new Date(item.dt * 1000).toLocaleDateString(),
+      icon: item.weather[0].icon,
+      iconDescription: item.weather[0].description,
+      tempF: item.main.temp,
+      windSpeed: item.wind.speed,
+      humidity: item.main.humidity,
+    }));
   }
 }
 

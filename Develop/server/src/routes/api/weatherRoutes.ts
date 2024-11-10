@@ -38,7 +38,7 @@ router.post("/", async (req, res) => {
     if (!coordinates) {
       coordinates = { lat: 0, lon: 0 };
     }
-
+    
     // Check if the city already exists in search history
     const cityExists = cities.some(city => city.name === cityName);
     if (!cityExists) {
@@ -64,4 +64,23 @@ router.get("/history", async (_, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
+router.post("/", async (req, res) => {
+  try {
+    const cityName = req.body.cityName || "Toronto";
+    const weatherData = await WeatherService.getWeatherForCity(cityName);
+
+    if (!weatherData) {
+      return res.status(404).json({ message: "City not found" });
+    }
+
+    const currentWeather = weatherData.current;
+    const forecastData = weatherData.forecast;
+
+    return res.status(200).json({ currentWeather, forecast: forecastData });
+  } catch (error) {
+    console.error("Error fetching weather:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 export default router;
